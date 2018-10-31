@@ -17,3 +17,21 @@ export RAYGUN_API_KEY=<api_key>
 dotnet build
 dotnet run --project PlugAndTrade.DieScheite.RayGun.Service
 ```
+## Deploy
+
+* The secret `raygun-secret` is expected to exist before the actual deployment.
+
+### 1. Set secrets
+
+```
+kubectl create secret generic raygun-secret \
+  --from-literal=apiKey=<api_key> \
+  --dry-run \
+  -o=yaml | kubectl apply -f -
+```
+
+### 2. Create deployment
+
+```
+kubectl apply -f deployment.yaml
+```
