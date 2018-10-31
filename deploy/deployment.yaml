@@ -40,5 +40,3 @@ spec:
               value: "Dieschiete.Raygun.Consumer"
             - name: RABBITMQ_HOST
               value: "rabbitmq"
-          ports:
-            - containerPort: 5000
