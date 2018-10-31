@@ -33,5 +33,5 @@ kubectl create secret generic raygun-secret \
 ### 2. Create deployment
 
 ```
-kubectl apply -f deployment.yaml
+kubectl apply -f deploy/deployment.yaml -n monitoring
 ```
