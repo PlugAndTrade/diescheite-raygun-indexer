@@ -33,9 +33,25 @@ namespace PlugAndTrade.DieScheite.RayGun.Service
                     UserCustomData = GetUserCustomData(logEntry),
                     Error = GetRaygunError(logEntry),
                     Request = CreateRaygunRequestMessage(logEntry),
-                    Response = CreateRaygunResponseMessage(logEntry)
+                    Response = CreateRaygunResponseMessage(logEntry),
+                    Tags = GetTags(logEntry)
+                        .Where(t => !string.IsNullOrWhiteSpace(t))
+                        .ToList()
                 }
             };
+        }
+
+        private IEnumerable<string> GetTags(LogEntry logEntry)
+        {
+            yield return logEntry.Level.ToString();
+            yield return logEntry.Protocol;
+            yield return logEntry.Route;
+
+            if (!string.IsNullOrWhiteSpace(logEntry.ServiceId))
+            {
+                yield return logEntry.ServiceId;
+                yield return $"{logEntry.ServiceId} {logEntry.ServiceVersion}";
+            }
         }
 
         private static RaygunResponseMessage CreateRaygunResponseMessage(LogEntry logEntry)
@@ -179,6 +195,23 @@ namespace PlugAndTrade.DieScheite.RayGun.Service
                 {
                     customData.Add(header.Key, JsonConvert.ToString(header.Value));
                 }
+            }
+
+            if (!string.IsNullOrEmpty(logEntry.Protocol))
+            {
+                customData.Add("protocol", logEntry.Protocol);
+            }
+
+            if (!string.IsNullOrEmpty(logEntry.Route))
+            {
+                customData.Add("route", logEntry.Route);
+            }
+
+            if (logEntry.RabbitMQ != null)
+            {
+                customData.Add("rabbitMq.queueName", logEntry.RabbitMQ.QueueName);
+                customData.Add("rabbitMq.messageId", logEntry.RabbitMQ.MessageId);
+                customData.Add("rabbitMq.acked", logEntry.RabbitMQ.Acked.ToString());
             }
 
             return customData;
