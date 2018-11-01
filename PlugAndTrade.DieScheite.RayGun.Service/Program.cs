@@ -64,6 +64,8 @@ namespace PlugAndTrade.DieScheite.RayGun.Service
 
         private static bool OnMessage(RaygunClient raygunClient, DieScheiteToRayGunMessageTranslator translator, Message message)
         {
+            Console.WriteLine($"Handling message: {message.MessageId}");
+
             try
             {
                 var logEntry = ReadLogEntry(message);
@@ -83,7 +85,7 @@ namespace PlugAndTrade.DieScheite.RayGun.Service
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                Console.WriteLine($"Unhandled exception: {e}");
                 return false;
             }
         }
