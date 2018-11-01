@@ -70,7 +70,7 @@ namespace PlugAndTrade.DieScheite.RayGun.Service
                 var logEntry = ReadLogEntry(message);
                 if (logEntry.Level < (int) LogEntryLevel.Warning)
                 {
-                    return false;
+                    return true;
                 }
                 var raygunMessage = CreateRaygunMessage(logEntry);
                 var task = raygunClient.Send(raygunMessage);
