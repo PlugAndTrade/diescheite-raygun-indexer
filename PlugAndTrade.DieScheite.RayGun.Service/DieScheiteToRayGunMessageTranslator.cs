@@ -12,6 +12,13 @@ namespace PlugAndTrade.DieScheite.RayGun.Service
 {
     public class DieScheiteToRayGunMessageTranslator
     {
+        private readonly int _minLevel;
+
+        public DieScheiteToRayGunMessageTranslator(int minLevel)
+        {
+            _minLevel = minLevel;
+        }
+
         public RaygunMessage Translate(LogEntry logEntry)
         {
             return new RaygunMessage
@@ -72,18 +79,27 @@ namespace PlugAndTrade.DieScheite.RayGun.Service
             return requestDetails;
         }
 
-        private static RaygunErrorMessage GetRaygunError(LogEntry logEntry)
+        private RaygunErrorMessage GetRaygunError(LogEntry logEntry)
         {
-            if (logEntry.Messages.Count == 1)
+            var messages = logEntry.Messages.Where(m => m.Level >= _minLevel).ToArray();
+
+            if (messages.Length == 0)
             {
-                var message = logEntry.Messages.Single();
+                // If this happens, RabbitMQ binding and config MIN_LEVEL differs -> use message with highest severity
+                return CreateRaygunErrorMessage(messages.MaxBy(m => m.Level));
+            }
+
+            if (messages.Length == 1)
+            {
+                var message = messages.Single();
                 return CreateRaygunErrorMessage(message);
             }
 
+            var highestSeverityMessage = messages.MaxBy(m => m.Level);
             return new RaygunErrorMessage
             {
-                InnerErrors = logEntry.Messages.Select(CreateRaygunErrorMessage).ToArray(),
-                Message = "Multiple errors"
+                InnerErrors = messages.Select(CreateRaygunErrorMessage).ToArray(),
+                Message = highestSeverityMessage.Message
             };
         }
 

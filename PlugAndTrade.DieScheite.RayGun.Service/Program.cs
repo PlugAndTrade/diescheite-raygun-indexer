@@ -57,7 +57,7 @@ namespace PlugAndTrade.DieScheite.RayGun.Service
                 Environment.GetEnvironmentVariable("RABBITMQ_CONNECTIONNAME")));
 
             services.AddSingleton(c => new RaygunClient(Environment.GetEnvironmentVariable("RAYGUN_API_KEY")));
-            services.AddSingleton<DieScheiteToRayGunMessageTranslator>();
+            services.AddSingleton(c => new DieScheiteToRayGunMessageTranslator(int.Parse(Environment.GetEnvironmentVariable("MIN_LEVEL") ?? "0")));
 
             return services.BuildServiceProvider();
         }
