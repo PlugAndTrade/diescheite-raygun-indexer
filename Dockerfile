@@ -14,4 +14,4 @@ RUN dotnet build -c Release PlugAndTrade.DieScheite.RayGun.Service.sln \
 FROM microsoft/dotnet:2.1-runtime
 WORKDIR /app
 COPY --from=builder /app/PlugAndTrade.DieScheite.RayGun.Service/out .
-ENTRYPOINT ["dotnet", "PlugAndTrade.DieScheite.RayGun.Service"]
+ENTRYPOINT ["dotnet", "PlugAndTrade.DieScheite.RayGun.Service.dll"]
