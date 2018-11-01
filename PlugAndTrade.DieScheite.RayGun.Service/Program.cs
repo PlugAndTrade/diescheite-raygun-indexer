@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
@@ -68,6 +68,10 @@ namespace PlugAndTrade.DieScheite.RayGun.Service
             try
             {
                 var logEntry = ReadLogEntry(message);
+                if (logEntry.Level < (int) LogEntryLevel.Warning)
+                {
+                    return false;
+                }
                 var raygunMessage = CreateRaygunMessage(logEntry);
                 var task = raygunClient.Send(raygunMessage);
                 if (!task.Wait(TimeSpan.FromSeconds(60)))
