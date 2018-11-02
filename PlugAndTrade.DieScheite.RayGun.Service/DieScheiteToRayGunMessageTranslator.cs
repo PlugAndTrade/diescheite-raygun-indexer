@@ -30,13 +30,14 @@ namespace PlugAndTrade.DieScheite.RayGun.Service
                         Name = logEntry.ServiceId,
                         Version = logEntry.ServiceVersion
                     },
+                    Version = $"{logEntry.ServiceId} {logEntry.ServiceVersion}",
                     UserCustomData = GetUserCustomData(logEntry),
                     Error = GetRaygunError(logEntry),
                     Request = CreateRaygunRequestMessage(logEntry),
                     Response = CreateRaygunResponseMessage(logEntry),
                     Tags = GetTags(logEntry)
                         .Where(t => !string.IsNullOrWhiteSpace(t))
-                        .ToList()
+                        .ToList(),
                 }
             };
         }
@@ -102,30 +103,36 @@ namespace PlugAndTrade.DieScheite.RayGun.Service
             if (messages.Length == 0)
             {
                 // If this happens, RabbitMQ binding and config MIN_LEVEL differs -> use message with highest severity
-                return CreateRaygunErrorMessage(messages.MaxBy(m => m.Level));
+                LogEntryMessage message = messages.MaxBy(m => m.Level);
+                return new RaygunErrorMessage
+                {
+                    Message = $"{logEntry.ServiceId} {message.Message}",
+                    StackTrace = CreateStackTrace(message.Stacktrace),
+                    Data = GetRaygunErrorMessageData(message)
+                };
             }
 
             if (messages.Length == 1)
             {
                 var message = messages.Single();
-                return CreateRaygunErrorMessage(message);
+                return new RaygunErrorMessage
+                {
+                    Message = $"{logEntry.ServiceId} {message.Message}",
+                    StackTrace = CreateStackTrace(message.Stacktrace),
+                    Data = GetRaygunErrorMessageData(message)
+                };
             }
 
             var highestSeverityMessage = messages.MaxBy(m => m.Level);
             return new RaygunErrorMessage
             {
-                InnerErrors = messages.Select(CreateRaygunErrorMessage).ToArray(),
-                Message = highestSeverityMessage.Message
-            };
-        }
-
-        private static RaygunErrorMessage CreateRaygunErrorMessage(LogEntryMessage message)
-        {
-            return new RaygunErrorMessage
-            {
-                Message = message.Message,
-                StackTrace = CreateStackTrace(message.Stacktrace),
-                Data = GetRaygunErrorMessageData(message)
+                InnerErrors = messages.Select(m => new RaygunErrorMessage
+                {
+                    Message = m.Message,
+                    StackTrace = CreateStackTrace(m.Stacktrace),
+                    Data = GetRaygunErrorMessageData(m)
+                }).ToArray(),
+                Message = $"{logEntry.ServiceId} {highestSeverityMessage.Message}"
             };
         }
 
@@ -182,19 +189,15 @@ namespace PlugAndTrade.DieScheite.RayGun.Service
                 { "id", logEntry.Id },
                 { "correlationId", logEntry.CorrelationId },
                 { "duration", Convert.ToString(logEntry.Duration) },
+                { "serviceId", logEntry.ServiceId },
+                { "serviceVersion", logEntry.ServiceVersion },
+                { "serviceInstanceId", logEntry.ServiceInstanceId },
+                { "level", logEntry.Level.ToString() },
             };
 
             if (!string.IsNullOrEmpty(logEntry.ParentId))
             {
                 customData.Add("parentId", logEntry.ParentId);
-            }
-
-            foreach (var header in logEntry.Headers ?? new List<KeyValuePair<string, object>>())
-            {
-                if (!string.IsNullOrEmpty(header.Key))
-                {
-                    customData.Add(header.Key, JsonConvert.ToString(header.Value));
-                }
             }
 
             if (!string.IsNullOrEmpty(logEntry.Protocol))
@@ -212,6 +215,14 @@ namespace PlugAndTrade.DieScheite.RayGun.Service
                 customData.Add("rabbitMq.queueName", logEntry.RabbitMQ.QueueName);
                 customData.Add("rabbitMq.messageId", logEntry.RabbitMQ.MessageId);
                 customData.Add("rabbitMq.acked", logEntry.RabbitMQ.Acked.ToString());
+            }
+
+            foreach (var header in logEntry.Headers ?? new List<KeyValuePair<string, object>>())
+            {
+                if (!string.IsNullOrEmpty(header.Key) && !customData.ContainsKey(header.Key))
+                {
+                    customData.Add(header.Key, JsonConvert.ToString(header.Value));
+                }
             }
 
             return customData;
