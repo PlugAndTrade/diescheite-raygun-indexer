@@ -20,7 +20,6 @@ spec:
             rabbitmqadmin declare exchange --host=$RABBIT_HOST --vhost=$RABBIT_VHOST --user=$RABBIT_USER --password=$RABBIT_PWD name=diescheite.raygun.dlx type=fanout durable=true
             rabbitmqadmin declare queue --host=$RABBIT_HOST --vhost=$RABBIT_VHOST --user=$RABBIT_USER --password=$RABBIT_PWD name=diescheite.raygun durable=true 'arguments={"x-dead-letter-exchange":"diescheite.raygun.dlx"}'
             rabbitmqadmin declare queue --host=$RABBIT_HOST --vhost=$RABBIT_VHOST --user=$RABBIT_USER --password=$RABBIT_PWD name=diescheite.raygun.dlq durable=true
-            rabbitmqadmin declare binding --host=$RABBIT_HOST --vhost=$RABBIT_VHOST --user=$RABBIT_USER --password=$RABBIT_PWD source=bergendalhs.oms.orderimport destination=bergendalhs.oms.orderimport.queue
             rabbitmqadmin declare binding --host=$RABBIT_HOST --vhost=$RABBIT_VHOST --user=$RABBIT_USER --password=$RABBIT_PWD source=diescheite.raygun.dlx destination=diescheite.raygun.dlq
             rabbitmqadmin declare binding --host=$RABBIT_HOST --vhost=$RABBIT_VHOST --user=$RABBIT_USER --password=$RABBIT_PWD source=diescheite destination=diescheite.raygun
       restartPolicy: Never
