@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Text;
@@ -74,12 +75,17 @@ namespace PlugAndTrade.DieScheite.RayGun.Service
                     return true;
                 }
                 var raygunMessage = translator.Translate(logEntry);
+
+                var timer = new Stopwatch();
+                timer.Start();
                 var task = raygunClient.Send(raygunMessage);
                 if (!task.Wait(TimeSpan.FromSeconds(60)))
                 {
                     Console.WriteLine("[Raygun] :: sending timeout exceded");
                     return false;
                 }
+                timer.Stop();
+                Console.WriteLine($"[Raygun] :: sending took {timer.ElapsedMilliseconds}");
 
                 return true;
             }
