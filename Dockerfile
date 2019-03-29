@@ -1,4 +1,3 @@
-
 FROM microsoft/dotnet:2.1-sdk AS builder
 
 ENV APP_DIR=/app
