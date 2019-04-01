@@ -65,10 +65,10 @@ namespace PlugAndTrade.DieScheite.RayGun.Service
 
         private static bool OnMessage(RaygunClient raygunClient, DieScheiteToRayGunMessageTranslator translator, Message message)
         {
-            Console.WriteLine($"Handling message: {message.MessageId}");
-
             try
             {
+                var fullTimer = new Stopwatch();
+                fullTimer.Start();
                 var logEntry = ReadLogEntry(message);
                 if (logEntry.Level < (int)LogEntryLevel.Warning)
                 {
@@ -76,16 +76,18 @@ namespace PlugAndTrade.DieScheite.RayGun.Service
                 }
                 var raygunMessage = translator.Translate(logEntry);
 
-                var timer = new Stopwatch();
-                timer.Start();
+                var rgTimer = new Stopwatch();
+                rgTimer.Start();
                 var task = raygunClient.Send(raygunMessage);
                 if (!task.Wait(TimeSpan.FromSeconds(60)))
                 {
                     Console.WriteLine("[Raygun] :: sending timeout exceded");
                     return false;
                 }
-                timer.Stop();
-                Console.WriteLine($"[Raygun] :: sending took {timer.ElapsedMilliseconds}");
+                rgTimer.Stop();
+                fullTimer.Stop();
+                Console.WriteLine($"[Raygun] :: sending took {rgTimer.ElapsedMilliseconds}");
+                Console.WriteLine($"[Raygun] :: everything took {fullTimer.ElapsedMilliseconds}");
 
                 return true;
             }
